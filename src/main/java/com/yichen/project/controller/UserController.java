@@ -70,12 +70,12 @@ public class UserController {
         if (userLoginRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        String userAccount = userLoginRequest.getUserAccount();
-        String userPassword = userLoginRequest.getUserPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
+        String userName = userLoginRequest.getUsername();
+        String password = userLoginRequest.getPassword();
+        if (StringUtils.isAnyBlank(userName, password)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.userLogin(userAccount, userPassword, request);
+        User user = userService.userLogin(userName, password, request);
         return ResultUtils.success(user);
     }
 

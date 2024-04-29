@@ -29,6 +29,7 @@ public class BaseResponse<T> implements Serializable {
         this(code, data, "");
     }
 
+    // 通过errorcode来构造对象
     public BaseResponse(ErrorCode errorCode) {
         this(errorCode.getCode(), null, errorCode.getMessage());
     }

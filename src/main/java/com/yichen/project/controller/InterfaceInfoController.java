@@ -2,21 +2,22 @@ package com.yichen.project.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yichen.chenapiclientsdk.client.ApiClient;
 import com.yichen.project.annotation.AuthCheck;
-import com.yichen.project.common.BaseResponse;
-import com.yichen.project.common.DeleteRequest;
-import com.yichen.project.common.ErrorCode;
-import com.yichen.project.common.ResultUtils;
+import com.yichen.project.common.*;
 import com.yichen.project.constant.CommonConstant;
 import com.yichen.project.exception.BusinessException;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoAddRequest;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoQueryRequest;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoUpdateRequest;
 import com.yichen.project.model.entity.InterfaceInfo;
+
 import com.yichen.project.model.entity.User;
+import com.yichen.project.model.enums.InterfaceInfoStatusEnum;
 import com.yichen.project.service.InterfaceInfoService;
 import com.yichen.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import nonapi.io.github.classgraph.json.Id;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,9 @@ public class InterfaceInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private ApiClient apiClient;
 
     // region 增删改查
 
@@ -186,14 +190,83 @@ public class InterfaceInfoController {
         if (size > 50) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
-        queryWrapper.like(StringUtils.isNotBlank(description), "description", description);
-        queryWrapper.orderBy(StringUtils.isNotBlank(sortField),
-                sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
+        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.like(StringUtils.isNotBlank(description), "description", description);
+//        queryWrapper.orderBy(StringUtils.isNotBlank(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
         Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size), queryWrapper);
         return ResultUtils.success(interfaceInfoPage);
     }
 
     // endregion
+    /**
+     * 发布
+     *
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/publish")
+    public BaseResponse<Boolean> publishInterfaceInfo(@RequestBody IdRequest idRequest,
+                                                     HttpServletRequest request) {
+        if (idRequest == null || idRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long id = idRequest.getId();
+        // 判断接口是否存在
+        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
+        if (oldInterfaceInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
 
+        // 判断接口是否可以调用（使用客户端SDK来判断）
+        com.yichen.chenapiclientsdk.model.User user = new com.yichen.chenapiclientsdk.model.User();
+        user.setName("wangyichen");
+        String result = apiClient.GetNameByPostBody(user);
+        if (StringUtils.isBlank(result)) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"接口验证失败");
+        }
+
+        // 将接口更新为 上线状态
+        InterfaceInfo interfaceInfo = new InterfaceInfo();
+        interfaceInfo.setId(id);
+        interfaceInfo.setStatus(InterfaceInfoStatusEnum.ONLINE.getValue());// 0 1 这种明确的状态 应该用枚举值
+        boolean updateResult = interfaceInfoService.updateById(interfaceInfo);
+        return ResultUtils.success(updateResult);
+    }
+
+    /**
+     * 下线
+     *
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/offline")
+    public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest,
+                                                     HttpServletRequest request) {
+        if (idRequest == null || idRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long id = idRequest.getId();
+        // 判断接口是否存在
+        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
+        if (oldInterfaceInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+
+//        // 判断接口是否可以调用（使用客户端SDK来判断）
+//        User user = new User();
+//        user.setName("wangyichen");
+//        String result = apiClient.GetNameByPostBody(user);
+//        if (StringUtils.isBlank(result)) {
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"接口验证失败");
+//        }
+
+        // 将接口更新为 下线状态
+        InterfaceInfo interfaceInfo = new InterfaceInfo();
+        interfaceInfo.setId(id);
+        interfaceInfo.setStatus(InterfaceInfoStatusEnum.OFFLINE.getValue());// 0 1 这种明确的状态 应该用枚举值
+        boolean updateResult = interfaceInfoService.updateById(interfaceInfo);
+        return ResultUtils.success(updateResult);
+    }
 }
