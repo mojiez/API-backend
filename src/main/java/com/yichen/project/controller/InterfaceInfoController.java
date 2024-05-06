@@ -2,12 +2,14 @@ package com.yichen.project.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.gson.Gson;
 import com.yichen.chenapiclientsdk.client.ApiClient;
 import com.yichen.project.annotation.AuthCheck;
 import com.yichen.project.common.*;
 import com.yichen.project.constant.CommonConstant;
 import com.yichen.project.exception.BusinessException;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoAddRequest;
+import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoInvokeRequest;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoQueryRequest;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoUpdateRequest;
 import com.yichen.project.model.entity.InterfaceInfo;
@@ -268,5 +270,60 @@ public class InterfaceInfoController {
         interfaceInfo.setStatus(InterfaceInfoStatusEnum.OFFLINE.getValue());// 0 1 这种明确的状态 应该用枚举值
         boolean updateResult = interfaceInfoService.updateById(interfaceInfo);
         return ResultUtils.success(updateResult);
+    }
+
+    /**
+     * 测试调用
+     *
+     * @param interfaceInfoInvokeRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/invoke")
+    public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
+                                                      HttpServletRequest request) {
+        if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long id = interfaceInfoInvokeRequest.getId();
+
+        // 取出参数
+        String userRequestParams = interfaceInfoInvokeRequest.getUserRequestParams();
+
+        // todo 根据不同的url调用不同的接口
+        // 判断接口是否存在
+        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
+        if (oldInterfaceInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+
+        // 判断接口是否关闭
+        if (oldInterfaceInfo.getStatus() != InterfaceInfoStatusEnum.ONLINE.getValue()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+//        // 判断接口是否可以调用（使用客户端SDK来判断）
+//        User user = new User();
+//        user.setName("wangyichen");
+//        String result = apiClient.GetNameByPostBody(user);
+//        if (StringUtils.isBlank(result)) {
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"接口验证失败");
+//        }
+
+        // 获取当前登陆的用户信息
+        User loginUser = userService.getLoginUser(request);
+
+        // 获取用户的 ak sk
+        String accessKey = loginUser.getAccessKey();
+        String secretKey = loginUser.getSecretKey();
+        // 使用用户的ak sk 来调用 而不是读取配置
+        ApiClient tempClient = new ApiClient(accessKey, secretKey);
+
+        // 获取前端传来的参数
+        Gson gson = new Gson();
+        com.yichen.chenapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.yichen.chenapiclientsdk.model.User.class);
+        String result = tempClient.GetNameByPostBody(user);
+
+        return ResultUtils.success(result);
     }
 }
