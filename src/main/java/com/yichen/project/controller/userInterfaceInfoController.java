@@ -16,12 +16,13 @@ import com.yichen.project.model.dto.userInterfaceInfo.UserInterfaceInfoQueryRequ
 import com.yichen.project.model.dto.userInterfaceInfo.UserInterfaceInfoUpdateRequest;
 import com.yichen.project.model.entity.InterfaceInfo;
 import com.yichen.project.model.entity.User;
-import com.yichen.project.model.entity.UserInterfaceInfo;
 import com.yichen.project.model.enums.InterfaceInfoStatusEnum;
 import com.yichen.project.service.InterfaceInfoService;
-import com.yichen.project.service.UserInterfaceInfoService;
+
 import com.yichen.project.service.UserService;
+import com.yichen.project.service.impl.InnerUserInterfaceInfoServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import model.entity.UserInterfaceInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +42,7 @@ import java.util.List;
 public class userInterfaceInfoController {
 
     @Resource
-    private UserInterfaceInfoService userInterfaceInfoService;
+    private InnerUserInterfaceInfoServiceImpl userInterfaceInfoService;
 
     @Resource
     private UserService userService;
