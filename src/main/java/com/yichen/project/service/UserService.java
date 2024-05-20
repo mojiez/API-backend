@@ -2,7 +2,8 @@ package com.yichen.project.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yichen.project.model.entity.User;
+import model.entity.User;
+
 
 import javax.servlet.http.HttpServletRequest;
 

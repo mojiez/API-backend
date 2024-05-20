@@ -12,13 +12,13 @@ import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoAddRequest;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoInvokeRequest;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoQueryRequest;
 import com.yichen.project.model.dto.interfaceInfo.InterfaceInfoUpdateRequest;
-import com.yichen.project.model.entity.InterfaceInfo;
 
-import com.yichen.project.model.entity.User;
 import com.yichen.project.model.enums.InterfaceInfoStatusEnum;
 import com.yichen.project.service.InterfaceInfoService;
 import com.yichen.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import model.entity.InterfaceInfo;
+import model.entity.User;
 import nonapi.io.github.classgraph.json.Id;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -37,10 +37,8 @@ import java.util.List;
 @RequestMapping("/interfaceInfo")
 @Slf4j
 public class InterfaceInfoController {
-
     @Resource
     private InterfaceInfoService interfaceInfoService;
-
     @Resource
     private UserService userService;
 
@@ -313,7 +311,7 @@ public class InterfaceInfoController {
         // 获取当前登陆的用户信息
         User loginUser = userService.getLoginUser(request);
 
-        // 获取用户的 ak sk
+        // 获取用户的 ak sk 从登陆的用户的request中查询用户，再通过查询到的信息获取ak sk
         String accessKey = loginUser.getAccessKey();
         String secretKey = loginUser.getSecretKey();
         // 使用用户的ak sk 来调用 而不是读取配置

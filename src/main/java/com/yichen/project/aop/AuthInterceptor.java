@@ -2,10 +2,10 @@ package com.yichen.project.aop;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.yichen.project.common.ErrorCode;
-import com.yichen.project.model.entity.User;
 import com.yichen.project.service.UserService;
 import com.yichen.project.annotation.AuthCheck;
 import com.yichen.project.exception.BusinessException;
+import model.entity.User;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -33,7 +33,6 @@ public class AuthInterceptor {
 
     @Resource
     private UserService userService;
-
     /**
      * 执行拦截
      *
